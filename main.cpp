@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <ctime>
+#include <iomanip>
 using namespace std;
 
 // ============================================================
@@ -58,6 +59,37 @@ void pause() {
     cout << "\nTekan Enter untuk melanjutkan...";
     cin.ignore();
     cin.get();
+}
+
+// ============================================================
+//  KONVERSI STRING KE ANGKA
+//  (pengganti stoi/stoll agar kompatibel dengan compiler lama)
+// ============================================================
+
+// Konversi string ke int — pengganti stoi()
+int toInt(const string& s) {
+    int hasil = 0;
+    size_t i = 0;
+    bool negatif = false;
+    if (s[i] == '-') { negatif = true; i++; }
+    while (i < s.size() && s[i] >= '0' && s[i] <= '9') {
+        hasil = hasil * 10 + (s[i] - '0');
+        i++;
+    }
+    return negatif ? -hasil : hasil;
+}
+
+// Konversi string ke long long — pengganti stoll()
+long long toLongLong(const string& s) {
+    long long hasil = 0;
+    size_t i = 0;
+    bool negatif = false;
+    if (s[i] == '-') { negatif = true; i++; }
+    while (i < s.size() && s[i] >= '0' && s[i] <= '9') {
+        hasil = hasil * 10 + (s[i] - '0');
+        i++;
+    }
+    return negatif ? -hasil : hasil;
 }
 
 // ============================================================
@@ -184,49 +216,76 @@ void menuLaporan() {
             if (n == 0) { cout << "Tidak ada barang aktif.\n"; pause(); continue; }
             sortByHarga(tmp, n);
             cout << "=== LAPORAN BARANG AKTIF (Urut Harga) ===\n";
-            cout << "------------------------------------------------------------\n";
+            // Header kolom
+            cout << left
+                 << setw(4)  << "ID"
+                 << setw(33) << "Nama"
+                 << setw(14) << "Harga"
+                 << setw(12) << "Sementara"
+                 << "\n";
+            cout << string(63, '-') << "\n";
             for (int i = 0; i < n; i++)
-                cout << "ID: " << tmp[i].id
-                     << " | " << tmp[i].nama
-                     << " | Rp" << tmp[i].harga_tertinggi
-                     << " | Sementara: " << tmp[i].pemenang << "\n";
-            cout << "------------------------------------------------------------\n";
+                cout << left
+                     << setw(4)  << tmp[i].id
+                     << setw(33) << tmp[i].nama.substr(0, 31)
+                     << "Rp" << setw(12) << tmp[i].harga_tertinggi
+                     << setw(12) << tmp[i].pemenang << "\n";
+            cout << string(63, '-') << "\n";
             cout << "Total: " << n << " barang aktif.\n";
             pause();
 
         } else if (pil == 2) {
             clearScreen();
             cout << "=== LAPORAN BARANG SUDAH TUTUP ===\n";
-            cout << "------------------------------------------------------------\n";
+            // Header kolom
+            cout << left
+                 << setw(4)  << "ID"
+                 << setw(33) << "Nama"
+                 << setw(14) << "Harga Akhir"
+                 << setw(12) << "Pemenang"
+                 << "\n";
+            cout << string(63, '-') << "\n";
             int n = 0;
             for (int i = 0; i < jml_barang; i++)
                 if (db_barang[i].status == 1) {
-                    cout << "ID: " << db_barang[i].id << " | " << db_barang[i].nama;
+                    cout << left
+                         << setw(4)  << db_barang[i].id
+                         << setw(33) << db_barang[i].nama.substr(0, 31);
                     if (db_barang[i].pemenang != "-" && !db_barang[i].pemenang.empty())
-                        cout << " | Pemenang: " << db_barang[i].pemenang
-                             << " (Rp" << db_barang[i].harga_tertinggi << ")";
-                    else cout << " | Tanpa penawar";
-                    cout << "\n"; n++;
+                        cout << "Rp" << setw(12) << db_barang[i].harga_tertinggi
+                             << setw(12) << db_barang[i].pemenang;
+                    else
+                        cout << setw(14) << "-" << setw(12) << "Tanpa penawar";
+                    cout << "\n";
+                    n++;
                 }
             if (n == 0) cout << "Belum ada barang yang ditutup.\n";
-            cout << "------------------------------------------------------------\n";
+            cout << string(63, '-') << "\n";
             pause();
 
         } else if (pil == 3) {
             clearScreen();
             cout << "=== SEMUA RIWAYAT PENAWARAN ===\n";
-            cout << "------------------------------------------------------------\n";
             if (jml_tawaran == 0) { cout << "Belum ada penawaran.\n"; pause(); continue; }
+            // Header kolom
+            cout << left
+                 << setw(10) << "Barang ID"
+                 << setw(12) << "Username"
+                 << setw(14) << "Nominal"
+                 << setw(17) << "Waktu"
+                 << "\n";
+            cout << string(53, '-') << "\n";
             for (int i = 0; i < jml_tawaran; i++) {
                 char w[20];
                 struct tm* info = localtime(&db_tawaran[i].waktu);
                 strftime(w, 20, "%Y-%m-%d %H:%M", info);
-                cout << "Barang ID " << db_tawaran[i].id_barang
-                     << " | " << db_tawaran[i].username
-                     << " | Rp" << db_tawaran[i].nominal
-                     << " | " << w << "\n";
+                cout << left
+                     << setw(10) << db_tawaran[i].id_barang
+                     << setw(12) << db_tawaran[i].username
+                     << "Rp" << setw(12) << db_tawaran[i].nominal
+                     << setw(17) << w << "\n";
             }
-            cout << "------------------------------------------------------------\n";
+            cout << string(53, '-') << "\n";
             pause();
 
         } else if (pil == 4) {
@@ -313,17 +372,24 @@ void menuAdmin() {
         } else if (pilihan == 2) {
             clearScreen();
             cout << "=== TUTUP LELANG MANUAL ===\n";
-            cout << "------------------------------------------------------------\n";
+            // Header kolom
+            cout << left
+                 << setw(4)  << "ID"
+                 << setw(33) << "Nama"
+                 << setw(14) << "Max Bid"
+                 << "\n";
+            cout << string(51, '-') << "\n";
             int ada = 0;
             for (int i = 0; i < jml_barang; i++)
                 if (db_barang[i].status == 0) {
-                    cout << "ID: " << db_barang[i].id
-                         << " | " << db_barang[i].nama
-                         << " | Max Bid: Rp" << db_barang[i].harga_tertinggi << "\n";
+                    cout << left
+                         << setw(4)  << db_barang[i].id
+                         << setw(33) << db_barang[i].nama.substr(0, 31)
+                         << "Rp" << db_barang[i].harga_tertinggi << "\n";
                     ada++;
                 }
             if (ada == 0) { cout << "Tidak ada lelang aktif.\n"; pause(); continue; }
-            cout << "------------------------------------------------------------\n";
+            cout << string(51, '-') << "\n";
 
             int id;
             cout << "ID barang yang ingin ditutup: "; cin >> id;
@@ -363,14 +429,26 @@ void menuAdmin() {
             if (pil == 1) sortByNama(tmp, jml_barang);
             else if (pil == 2) sortByHarga(tmp, jml_barang);
 
-            cout << "\n------------------------------------------------------------\n";
+            cout << "\n";
+            // Header kolom
+            cout << left
+                 << setw(4)  << "ID"
+                 << setw(33) << "Nama"
+                 << setw(12) << "Kategori"
+                 << setw(14) << "Max Bid"
+                 << setw(7)  << "Status"
+                 << setw(12) << "Pemenang"
+                 << "\n";
+            cout << string(82, '-') << "\n";
             for (int i = 0; i < jml_barang; i++)
-                cout << "ID: " << tmp[i].id
-                     << " | " << tmp[i].nama
-                     << " | Rp" << tmp[i].harga_tertinggi
-                     << " | " << (tmp[i].status == 0 ? "AKTIF" : "TUTUP")
-                     << " | Pemenang: " << tmp[i].pemenang << "\n";
-            cout << "------------------------------------------------------------\n";
+                cout << left
+                     << setw(4)  << tmp[i].id
+                     << setw(33) << tmp[i].nama.substr(0, 31)
+                     << setw(12) << tmp[i].kategori.substr(0, 10)
+                     << "Rp" << setw(12) << tmp[i].harga_tertinggi
+                     << setw(7)  << (tmp[i].status == 0 ? "AKTIF" : "TUTUP")
+                     << setw(12) << tmp[i].pemenang << "\n";
+            cout << string(82, '-') << "\n";
             cout << "Total: " << jml_barang << " barang.\n";
             pause();
 
@@ -378,12 +456,19 @@ void menuAdmin() {
             clearScreen();
             if (jml_barang == 0) { cout << "Belum ada barang.\n"; pause(); continue; }
             cout << "=== HAPUS BARANG ===\n";
-            cout << "------------------------------------------------------------\n";
+            // Header kolom
+            cout << left
+                 << setw(4)  << "ID"
+                 << setw(33) << "Nama"
+                 << setw(7)  << "Status"
+                 << "\n";
+            cout << string(44, '-') << "\n";
             for (int i = 0; i < jml_barang; i++)
-                cout << "ID: " << db_barang[i].id
-                     << " | " << db_barang[i].nama
-                     << " | " << (db_barang[i].status == 0 ? "AKTIF" : "TUTUP") << "\n";
-            cout << "------------------------------------------------------------\n";
+                cout << left
+                     << setw(4)  << db_barang[i].id
+                     << setw(33) << db_barang[i].nama.substr(0, 31)
+                     << setw(7)  << (db_barang[i].status == 0 ? "AKTIF" : "TUTUP") << "\n";
+            cout << string(44, '-') << "\n";
 
             int id;
             cout << "ID barang yang ingin dihapus: "; cin >> id;
@@ -456,18 +541,28 @@ void menuPeserta() {
             if (pil == 1) sortByHarga(tmp, n);
             else if (pil == 2) sortByNama(tmp, n);
 
-            cout << "\n------------------------------------------------------------\n";
+            cout << "\n";
+            // Header kolom
+            cout << left
+                 << setw(4)  << "ID"
+                 << setw(33) << "Nama"
+                 << setw(12) << "Kategori"
+                 << setw(14) << "Max Bid"
+                 << setw(17) << "Tutup"
+                 << "\n";
+            cout << string(80, '-') << "\n";
             for (int i = 0; i < n; i++) {
                 char w[20];
                 struct tm* info = localtime(&tmp[i].waktu_tutup);
                 strftime(w, 20, "%Y-%m-%d %H:%M", info);
-                cout << "ID: " << tmp[i].id
-                     << " | " << tmp[i].nama
-                     << " | " << tmp[i].kategori
-                     << " | Max Bid: Rp" << tmp[i].harga_tertinggi
-                     << " | Tutup: " << w << "\n";
+                cout << left
+                     << setw(4)  << tmp[i].id
+                     << setw(33) << tmp[i].nama.substr(0, 31)
+                     << setw(12) << tmp[i].kategori.substr(0, 10)
+                     << "Rp" << setw(12) << tmp[i].harga_tertinggi
+                     << setw(17) << w << "\n";
             }
-            cout << "------------------------------------------------------------\n";
+            cout << string(80, '-') << "\n";
             cout << "Total: " << n << " lelang aktif.\n";
             pause();
 
@@ -480,35 +575,53 @@ void menuPeserta() {
             cout << "Kata kunci nama: "; getline(cin, kata);
 
             bool ketemu = false;
-            cout << "\n------------------------------------------------------------\n";
+            cout << "\n";
+            // Header kolom
+            cout << left
+                 << setw(4)  << "ID"
+                 << setw(33) << "Nama"
+                 << setw(12) << "Kategori"
+                 << setw(14) << "Max Bid"
+                 << setw(6)  << "Status"
+                 << "\n";
+            cout << string(69, '-') << "\n";
             // Sequential Search: telusuri tiap elemen satu per satu
             for (int i = 0; i < jml_barang; i++)
                 if (db_barang[i].nama.find(kata) != string::npos) {
-                    cout << "ID: " << db_barang[i].id
-                         << " | " << db_barang[i].nama
-                         << " | Rp" << db_barang[i].harga_tertinggi
-                         << " | " << (db_barang[i].status == 0 ? "AKTIF" : "TUTUP") << "\n";
+                    cout << left
+                         << setw(4)  << db_barang[i].id
+                         << setw(33) << db_barang[i].nama.substr(0, 31)
+                         << setw(12) << db_barang[i].kategori.substr(0, 10)
+                         << "Rp" << setw(12) << db_barang[i].harga_tertinggi
+                         << setw(6)  << (db_barang[i].status == 0 ? "AKTIF" : "TUTUP") << "\n";
                     ketemu = true;
                 }
             if (!ketemu) cout << "Tidak ada barang yang cocok.\n";
-            cout << "------------------------------------------------------------\n";
+            cout << string(69, '-') << "\n";
             pause();
 
         } else if (pilihan == 3) {
             clearScreen();
             if (jml_tawaran >= 100) { cout << "Penyimpanan tawaran penuh.\n"; pause(); continue; }
             cout << "=== TAWAR BARANG ===\n";
-            cout << "------------------------------------------------------------\n";
+            // Header kolom
+            cout << left
+                 << setw(4)  << "ID"
+                 << setw(33) << "Nama"
+                 << setw(14) << "Max Bid"
+                 << "\n";
+            cout << string(51, '-') << "\n";
             int ada = 0;
             for (int i = 0; i < jml_barang; i++)
                 if (db_barang[i].status == 0) {
-                    cout << "ID: " << db_barang[i].id
-                         << " | " << db_barang[i].nama
-                         << " | Max Bid: Rp" << db_barang[i].harga_tertinggi << "\n";
+                    cout << left
+                         << setw(4)  << db_barang[i].id
+                         << setw(33) << db_barang[i].nama.substr(0, 31)
+                         << "Rp" << db_barang[i].harga_tertinggi << "\n";
                     ada++;
                 }
             if (ada == 0) { cout << "Tidak ada lelang aktif.\n"; pause(); continue; }
-            cout << "------------------------------------------------------------\n";
+            cout << string(51, '-') << "\n";
 
             int id; long long nominal;
             cout << "ID Barang   : "; cin >> id;
@@ -561,32 +674,49 @@ void menuPeserta() {
             cout << "=== AKTIVITAS SAYA (" << currentUser << ") ===\n";
 
             cout << "\n[ Riwayat Penawaran ]\n";
-            cout << "------------------------------------------------------------\n";
+            // Header kolom
+            cout << left
+                 << setw(10) << "Barang ID"
+                 << setw(12) << "Username"
+                 << setw(14) << "Nominal"
+                 << setw(17) << "Waktu"
+                 << "\n";
+            cout << string(53, '-') << "\n";
             int adaT = 0;
             for (int i = 0; i < jml_tawaran; i++)
                 if (db_tawaran[i].username == currentUser) {
                     char w[20];
                     struct tm* info = localtime(&db_tawaran[i].waktu);
                     strftime(w, 20, "%Y-%m-%d %H:%M", info);
-                    cout << "Barang ID " << db_tawaran[i].id_barang
-                         << " | Rp" << db_tawaran[i].nominal
-                         << " | " << w << "\n";
+                    cout << left
+                         << setw(10) << db_tawaran[i].id_barang
+                         << setw(12) << db_tawaran[i].username
+                         << "Rp" << setw(12) << db_tawaran[i].nominal
+                         << setw(17) << w << "\n";
                     adaT++;
                 }
             if (adaT == 0) cout << "Belum ada penawaran.\n";
+            cout << string(53, '-') << "\n";
 
             cout << "\n[ Lelang yang Sedang Anda Pimpin ]\n";
-            cout << "------------------------------------------------------------\n";
+            // Header kolom
+            cout << left
+                 << setw(4)  << "ID"
+                 << setw(33) << "Nama"
+                 << setw(14) << "Tawaran Anda"
+                 << "\n";
+            cout << string(51, '-') << "\n";
             int adaP = 0;
             for (int i = 0; i < jml_barang; i++)
                 if (db_barang[i].status == 0 && db_barang[i].pemenang == currentUser) {
-                    cout << "ID: " << db_barang[i].id
-                         << " | " << db_barang[i].nama
-                         << " | Rp" << db_barang[i].harga_tertinggi << "\n";
+                    cout << left
+                         << setw(4)  << db_barang[i].id
+                         << setw(33) << db_barang[i].nama.substr(0, 31)
+                         << "Rp" << db_barang[i].harga_tertinggi << "\n";
                     adaP++;
                 }
             if (adaP == 0) cout << "Tidak sedang memimpin lelang apapun.\n";
-            cout << "------------------------------------------------------------\n";
+            cout << string(51, '-') << "\n";
             pause();
 
         } else if (pilihan == 5) {
@@ -626,15 +756,15 @@ int main() {
     if (fBarang.is_open()) {
         getline(fBarang, buf); // skip header
         while (getline(fBarang, buf, ',')) {
-            db_barang[jml_barang].id = stoi(buf);
+            db_barang[jml_barang].id = toInt(buf);
             getline(fBarang, db_barang[jml_barang].nama, ',');
             getline(fBarang, db_barang[jml_barang].deskripsi, ',');
             getline(fBarang, db_barang[jml_barang].kategori, ',');
-            getline(fBarang, buf, ','); db_barang[jml_barang].harga_awal      = stoll(buf);
-            getline(fBarang, buf, ','); db_barang[jml_barang].harga_tertinggi = stoll(buf);
+            getline(fBarang, buf, ','); db_barang[jml_barang].harga_awal      = toLongLong(buf);
+            getline(fBarang, buf, ','); db_barang[jml_barang].harga_tertinggi = toLongLong(buf);
             getline(fBarang, db_barang[jml_barang].pemenang, ',');
-            getline(fBarang, buf, ','); db_barang[jml_barang].waktu_tutup = (time_t)stoll(buf);
-            getline(fBarang, buf);     db_barang[jml_barang].status       = stoi(buf);
+            getline(fBarang, buf, ','); db_barang[jml_barang].waktu_tutup = (time_t)toLongLong(buf);
+            getline(fBarang, buf);     db_barang[jml_barang].status       = toInt(buf);
             jml_barang++;
         }
         fBarang.close();
@@ -644,10 +774,10 @@ int main() {
     if (fTawaran.is_open()) {
         getline(fTawaran, buf); // skip header
         while (getline(fTawaran, buf, ',')) {
-            db_tawaran[jml_tawaran].id_barang = stoi(buf);
+            db_tawaran[jml_tawaran].id_barang = toInt(buf);
             getline(fTawaran, db_tawaran[jml_tawaran].username, ',');
-            getline(fTawaran, buf, ','); db_tawaran[jml_tawaran].nominal = stoll(buf);
-            getline(fTawaran, buf);     db_tawaran[jml_tawaran].waktu   = (time_t)stoll(buf);
+            getline(fTawaran, buf, ','); db_tawaran[jml_tawaran].nominal = toLongLong(buf);
+            getline(fTawaran, buf);     db_tawaran[jml_tawaran].waktu   = (time_t)toLongLong(buf);
             jml_tawaran++;
         }
         fTawaran.close();
