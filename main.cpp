@@ -4,8 +4,6 @@
 #include <ctime>
 using namespace std;
 
-
-
 // ============================================================
 //  STRUCT
 // ============================================================
@@ -46,7 +44,7 @@ string currentRole = "";
 const string ADMIN_CODE = "ADMIN123";
 
 // ============================================================
-//  BERSIHKAN TERMINAL & SYSTEM PAUSE
+//  UTILITAS TERMINAL
 // ============================================================
 void clearScreen() {
 #ifdef _WIN32
@@ -61,7 +59,6 @@ void pause() {
     cin.ignore();
     cin.get();
 }
-
 
 // ============================================================
 //  SORTING
@@ -109,51 +106,59 @@ int searchBarangById(int id) {
 //  DAFTAR & LOGIN
 // ============================================================
 void daftarAkun() {
-    if (jml_akun >= 100) { cout << "Database akun penuh!\n"; return; }
+    clearScreen();
+    if (jml_akun >= 100) { cout << "Database akun penuh!\n"; pause(); return; }
     Akun a;
-    cout << "\n--- DAFTAR AKUN BARU ---\nUsername: "; cin >> a.username;
+    cout << "=== DAFTAR AKUN BARU ===\n";
+    cout << "Username : "; cin >> a.username;
     for (int i = 0; i < jml_akun; i++)
         if (db_akun[i].username == a.username) {
-            cout << "Username sudah terdaftar!\n"; return;
+            cout << "Username sudah terdaftar!\n"; pause(); return;
         }
-    cout << "Password: "; cin >> a.password;
+    cout << "Password : "; cin >> a.password;
 
     int roleChoice;
-    cout << "Pilih Role:\n[1] Peserta\n[2] Admin\nPilihan: "; cin >> roleChoice;
+    cout << "\nPilih Role:\n[1] Peserta\n[2] Admin\nPilihan: "; cin >> roleChoice;
 
     if (roleChoice == 2) {
         string kode;
         cout << "Kode Admin: "; cin >> kode;
         if (kode == ADMIN_CODE) a.role = "ADMIN";
-        else { cout << "Kode salah! Jadi Peserta.\n"; a.role = "PESERTA"; }
+        else { cout << "Kode salah! Didaftarkan sebagai Peserta.\n"; a.role = "PESERTA"; }
     } else a.role = "PESERTA";
 
-    db_akun[jml_akun] = a; 
+    db_akun[jml_akun] = a;
     jml_akun++;
 
-    // Simpan akun ke file
+    // Simpan akun ke file (baris pertama = header)
     ofstream fAkun("akun.csv");
+    fAkun << "username,password,role\n";
     for (int i = 0; i < jml_akun; i++)
         fAkun << db_akun[i].username << ","
               << db_akun[i].password << ","
               << db_akun[i].role << "\n";
     fAkun.close();
 
-    cout << "Akun berhasil dibuat!\n";
+    cout << "\nAkun berhasil dibuat sebagai " << a.role << "!\n";
+    pause();
 }
 
 void login() {
+    clearScreen();
     string usr, pwd;
-    cout << "\n--- LOGIN ---\nUsername: "; cin >> usr;
-    cout << "Password: "; cin >> pwd;
+    cout << "=== LOGIN ===\n";
+    cout << "Username : "; cin >> usr;
+    cout << "Password : "; cin >> pwd;
     for (int i = 0; i < jml_akun; i++)
         if (db_akun[i].username == usr && db_akun[i].password == pwd) {
             currentUser = db_akun[i].username;
             currentRole = db_akun[i].role;
-            cout << "Login berhasil, " << currentUser << "!\n";
+            cout << "\nLogin berhasil! Selamat datang, " << currentUser << ".\n";
+            pause();
             return;
         }
-    cout << "Gagal login!\n";
+    cout << "\nUsername atau password salah!\n";
+    pause();
 }
 
 // ============================================================
@@ -162,7 +167,8 @@ void login() {
 void menuLaporan() {
     int pil;
     do {
-        cout << "\n=== LAPORAN ===\n";
+        clearScreen();
+        cout << "=== LAPORAN ===\n";
         cout << "[1] Barang Aktif (urut harga)\n";
         cout << "[2] Barang Sudah Tutup + Pemenang\n";
         cout << "[3] Semua Riwayat Penawaran\n";
@@ -171,21 +177,27 @@ void menuLaporan() {
         cin >> pil;
 
         if (pil == 1) {
-            // Laporan barang aktif, diurutkan harga tertinggi
+            clearScreen();
             Barang tmp[100]; int n = 0;
             for (int i = 0; i < jml_barang; i++)
                 if (db_barang[i].status == 0) tmp[n++] = db_barang[i];
-            if (n == 0) { cout << "\nTidak ada barang aktif.\n"; continue; }
+            if (n == 0) { cout << "Tidak ada barang aktif.\n"; pause(); continue; }
             sortByHarga(tmp, n);
-            cout << "\n[ LAPORAN BARANG AKTIF - Urut Harga ]\n";
+            cout << "=== LAPORAN BARANG AKTIF (Urut Harga) ===\n";
+            cout << "------------------------------------------------------------\n";
             for (int i = 0; i < n; i++)
-                cout << "ID: " << tmp[i].id << " | " << tmp[i].nama
+                cout << "ID: " << tmp[i].id
+                     << " | " << tmp[i].nama
                      << " | Rp" << tmp[i].harga_tertinggi
-                     << " | Pemenang sementara: " << tmp[i].pemenang << "\n";
+                     << " | Sementara: " << tmp[i].pemenang << "\n";
+            cout << "------------------------------------------------------------\n";
+            cout << "Total: " << n << " barang aktif.\n";
+            pause();
 
         } else if (pil == 2) {
-            // Laporan barang yang sudah tutup
-            cout << "\n[ LAPORAN BARANG SUDAH TUTUP ]\n";
+            clearScreen();
+            cout << "=== LAPORAN BARANG SUDAH TUTUP ===\n";
+            cout << "------------------------------------------------------------\n";
             int n = 0;
             for (int i = 0; i < jml_barang; i++)
                 if (db_barang[i].status == 1) {
@@ -196,12 +208,15 @@ void menuLaporan() {
                     else cout << " | Tanpa penawar";
                     cout << "\n"; n++;
                 }
-            if (n == 0) cout << "  Belum ada barang ditutup.\n";
+            if (n == 0) cout << "Belum ada barang yang ditutup.\n";
+            cout << "------------------------------------------------------------\n";
+            pause();
 
         } else if (pil == 3) {
-            // Laporan semua riwayat penawaran
-            cout << "\n[ LAPORAN SEMUA RIWAYAT PENAWARAN ]\n";
-            if (jml_tawaran == 0) { cout << "  Belum ada penawaran.\n"; continue; }
+            clearScreen();
+            cout << "=== SEMUA RIWAYAT PENAWARAN ===\n";
+            cout << "------------------------------------------------------------\n";
+            if (jml_tawaran == 0) { cout << "Belum ada penawaran.\n"; pause(); continue; }
             for (int i = 0; i < jml_tawaran; i++) {
                 char w[20];
                 struct tm* info = localtime(&db_tawaran[i].waktu);
@@ -211,11 +226,13 @@ void menuLaporan() {
                      << " | Rp" << db_tawaran[i].nominal
                      << " | " << w << "\n";
             }
+            cout << "------------------------------------------------------------\n";
+            pause();
 
         } else if (pil == 4) {
-            // Ekspor laporan ke CSV (file I/O dengan fstream)
+            // Ekspor laporan ke CSV dengan header
             ofstream f("laporan.csv");
-            if (!f.is_open()) { cout << "Gagal membuat file.\n"; continue; }
+            if (!f.is_open()) { cout << "Gagal membuat file.\n"; pause(); continue; }
             f << "ID;Nama;Kategori;Harga Awal;Harga Tertinggi;Pemenang;Status\n";
             for (int i = 0; i < jml_barang; i++)
                 f << db_barang[i].id << ";" << db_barang[i].nama << ";"
@@ -224,9 +241,11 @@ void menuLaporan() {
                   << (db_barang[i].status == 0 ? "AKTIF" : "TUTUP") << "\n";
             f.close();
             cout << "\nLaporan diekspor ke 'laporan.csv'.\n";
+            pause();
 
         } else if (pil != 5) {
             cout << "Pilihan tidak valid!\n";
+            pause();
         }
     } while (pil != 5);
 }
@@ -243,7 +262,8 @@ void menuAdmin() {
             if (db_barang[i].status == 0 && now >= db_barang[i].waktu_tutup)
                 db_barang[i].status = 1;
 
-        cout << "\n=== MENU ADMIN (" << currentUser << ") ===\n";
+        clearScreen();
+        cout << "=== MENU ADMIN (" << currentUser << ") ===\n";
         cout << "[1] Tambah Barang\n";
         cout << "[2] Tutup Lelang Manual\n";
         cout << "[3] Lihat Semua Barang\n";
@@ -253,28 +273,29 @@ void menuAdmin() {
         cin >> pilihan;
 
         if (pilihan == 1) {
-            // Tambah barang baru
-            if (jml_barang >= 100) { cout << "Database barang penuh!\n"; continue; }
+            clearScreen();
+            if (jml_barang >= 100) { cout << "Database barang penuh!\n"; pause(); continue; }
             Barang b;
             b.id = (jml_barang == 0) ? 1 : db_barang[jml_barang - 1].id + 1;
             cin.ignore();
-            cout << "\n--- TAMBAH BARANG (ID " << b.id << ") ---\n";
-            cout << "Nama Barang: "; getline(cin, b.nama);
-            cout << "Deskripsi  : "; getline(cin, b.deskripsi);
-            cout << "Kategori   : "; getline(cin, b.kategori);
-            cout << "Harga Awal : "; cin >> b.harga_awal;
+            cout << "=== TAMBAH BARANG (ID " << b.id << ") ===\n";
+            cout << "Nama Barang  : "; getline(cin, b.nama);
+            cout << "Deskripsi    : "; getline(cin, b.deskripsi);
+            cout << "Kategori     : "; getline(cin, b.kategori);
+            cout << "Harga Awal   : Rp"; cin >> b.harga_awal;
             int durasi;
-            cout << "Durasi (Jam): "; cin >> durasi;
+            cout << "Durasi (Jam) : "; cin >> durasi;
 
             b.harga_tertinggi = b.harga_awal;
-            b.pemenang  = "-";
-            b.status    = 0;
-            b.waktu_tutup = time(0) + ((time_t)durasi * 3600);
+            b.pemenang        = "-";
+            b.status          = 0;
+            b.waktu_tutup     = time(0) + ((time_t)durasi * 3600);
 
             db_barang[jml_barang] = b; jml_barang++;
 
-            // Simpan barang ke file
+            // Simpan barang ke file (baris pertama = header)
             ofstream fBarang("barang.csv");
+            fBarang << "id,nama,deskripsi,kategori,harga_awal,harga_tertinggi,pemenang,waktu_tutup,status\n";
             for (int i = 0; i < jml_barang; i++)
                 fBarang << db_barang[i].id << "," << db_barang[i].nama << ","
                         << db_barang[i].deskripsi << "," << db_barang[i].kategori << ","
@@ -286,35 +307,40 @@ void menuAdmin() {
             char w[20];
             struct tm* info = localtime(&b.waktu_tutup);
             strftime(w, 20, "%Y-%m-%d %H:%M", info);
-            cout << "Barang tersimpan! Lelang tutup pada: " << w << "\n";
+            cout << "\nBarang tersimpan! Lelang tutup pada: " << w << "\n";
+            pause();
 
         } else if (pilihan == 2) {
-            // Tutup lelang manual
-            cout << "\n--- TUTUP LELANG MANUAL ---\n";
+            clearScreen();
+            cout << "=== TUTUP LELANG MANUAL ===\n";
+            cout << "------------------------------------------------------------\n";
             int ada = 0;
             for (int i = 0; i < jml_barang; i++)
                 if (db_barang[i].status == 0) {
-                    cout << "ID: " << db_barang[i].id << " | " << db_barang[i].nama
+                    cout << "ID: " << db_barang[i].id
+                         << " | " << db_barang[i].nama
                          << " | Max Bid: Rp" << db_barang[i].harga_tertinggi << "\n";
                     ada++;
                 }
-            if (ada == 0) { cout << "Tidak ada lelang aktif.\n"; continue; }
+            if (ada == 0) { cout << "Tidak ada lelang aktif.\n"; pause(); continue; }
+            cout << "------------------------------------------------------------\n";
 
             int id;
             cout << "ID barang yang ingin ditutup: "; cin >> id;
             int idx = searchBarangById(id);
-            if (idx == -1) { cout << "ID tidak ditemukan.\n"; continue; }
-            if (db_barang[idx].status != 0) { cout << "Barang sudah tutup.\n"; continue; }
+            if (idx == -1) { cout << "ID tidak ditemukan.\n"; pause(); continue; }
+            if (db_barang[idx].status != 0) { cout << "Barang sudah tutup.\n"; pause(); continue; }
 
             db_barang[idx].status = 1;
-            cout << "\nLelang '" << db_barang[idx].nama << "' ditutup.\n";
+            cout << "\nLelang '" << db_barang[idx].nama << "' berhasil ditutup.\n";
             if (db_barang[idx].pemenang != "-" && !db_barang[idx].pemenang.empty())
-                cout << "PEMENANG: " << db_barang[idx].pemenang
+                cout << "Pemenang : " << db_barang[idx].pemenang
                      << " (Rp" << db_barang[idx].harga_tertinggi << ")\n";
-            else cout << "Tanpa penawar.\n";
+            else cout << "Tidak ada penawar.\n";
 
             // Simpan perubahan status ke file
             ofstream fBarang("barang.csv");
+            fBarang << "id,nama,deskripsi,kategori,harga_awal,harga_tertinggi,pemenang,waktu_tutup,status\n";
             for (int i = 0; i < jml_barang; i++)
                 fBarang << db_barang[i].id << "," << db_barang[i].nama << ","
                         << db_barang[i].deskripsi << "," << db_barang[i].kategori << ","
@@ -322,46 +348,54 @@ void menuAdmin() {
                         << db_barang[i].pemenang << "," << db_barang[i].waktu_tutup << ","
                         << db_barang[i].status << "\n";
             fBarang.close();
+            pause();
 
         } else if (pilihan == 3) {
-            // Lihat semua barang dengan pilihan urutan
-            if (jml_barang == 0) { cout << "\nBelum ada barang.\n"; continue; }
+            clearScreen();
+            if (jml_barang == 0) { cout << "Belum ada barang.\n"; pause(); continue; }
             Barang tmp[100];
             for (int i = 0; i < jml_barang; i++) tmp[i] = db_barang[i];
 
             int pil;
-            cout << "\n--- LIHAT SEMUA BARANG ---\n";
+            cout << "=== LIHAT SEMUA BARANG ===\n";
             cout << "[1] Urutkan Nama (A-Z)\n[2] Urutkan Harga (tertinggi)\n[3] Tanpa urut\nPilih: ";
             cin >> pil;
             if (pil == 1) sortByNama(tmp, jml_barang);
             else if (pil == 2) sortByHarga(tmp, jml_barang);
 
-            cout << "\n";
+            cout << "\n------------------------------------------------------------\n";
             for (int i = 0; i < jml_barang; i++)
-                cout << "ID: " << tmp[i].id << " | " << tmp[i].nama
+                cout << "ID: " << tmp[i].id
+                     << " | " << tmp[i].nama
                      << " | Rp" << tmp[i].harga_tertinggi
                      << " | " << (tmp[i].status == 0 ? "AKTIF" : "TUTUP")
                      << " | Pemenang: " << tmp[i].pemenang << "\n";
+            cout << "------------------------------------------------------------\n";
             cout << "Total: " << jml_barang << " barang.\n";
+            pause();
 
         } else if (pilihan == 4) {
-            // Hapus barang
-            if (jml_barang == 0) { cout << "\nBelum ada barang.\n"; continue; }
-            cout << "\n--- HAPUS BARANG ---\n";
+            clearScreen();
+            if (jml_barang == 0) { cout << "Belum ada barang.\n"; pause(); continue; }
+            cout << "=== HAPUS BARANG ===\n";
+            cout << "------------------------------------------------------------\n";
             for (int i = 0; i < jml_barang; i++)
-                cout << "ID: " << db_barang[i].id << " | " << db_barang[i].nama
+                cout << "ID: " << db_barang[i].id
+                     << " | " << db_barang[i].nama
                      << " | " << (db_barang[i].status == 0 ? "AKTIF" : "TUTUP") << "\n";
+            cout << "------------------------------------------------------------\n";
 
             int id;
             cout << "ID barang yang ingin dihapus: "; cin >> id;
             int idx = searchBarangById(id);
-            if (idx == -1) { cout << "ID tidak ditemukan.\n"; continue; }
+            if (idx == -1) { cout << "ID tidak ditemukan.\n"; pause(); continue; }
 
             for (int i = idx; i < jml_barang - 1; i++) db_barang[i] = db_barang[i + 1];
             jml_barang--;
 
             // Simpan setelah hapus
             ofstream fBarang("barang.csv");
+            fBarang << "id,nama,deskripsi,kategori,harga_awal,harga_tertinggi,pemenang,waktu_tutup,status\n";
             for (int i = 0; i < jml_barang; i++)
                 fBarang << db_barang[i].id << "," << db_barang[i].nama << ","
                         << db_barang[i].deskripsi << "," << db_barang[i].kategori << ","
@@ -370,13 +404,16 @@ void menuAdmin() {
                         << db_barang[i].status << "\n";
             fBarang.close();
             cout << "Barang ID " << id << " berhasil dihapus.\n";
+            pause();
 
         } else if (pilihan == 5) {
             menuLaporan();
         } else if (pilihan == 6) {
-            cout << "Logout berhasil.\n";
+            cout << "\nSampai jumpa, " << currentUser << "!\n";
+            pause();
         } else {
             cout << "Pilihan tidak valid!\n";
+            pause();
         }
     } while (pilihan != 6);
 
@@ -396,7 +433,8 @@ void menuPeserta() {
             if (db_barang[i].status == 0 && now >= db_barang[i].waktu_tutup)
                 db_barang[i].status = 1;
 
-        cout << "\n=== MENU PESERTA (" << currentUser << ") ===\n";
+        clearScreen();
+        cout << "=== MENU PESERTA (" << currentUser << ") ===\n";
         cout << "[1] Lihat Lelang Aktif\n";
         cout << "[2] Cari Barang\n";
         cout << "[3] Tawar Barang\n";
@@ -405,79 +443,88 @@ void menuPeserta() {
         cin >> pilihan;
 
         if (pilihan == 1) {
-            // Lihat semua lelang yang masih aktif
+            clearScreen();
             Barang tmp[100]; int n = 0;
             for (int i = 0; i < jml_barang; i++)
                 if (db_barang[i].status == 0) tmp[n++] = db_barang[i];
-            if (n == 0) { cout << "\nTidak ada lelang aktif.\n"; continue; }
+            if (n == 0) { cout << "Tidak ada lelang aktif saat ini.\n"; pause(); continue; }
 
             int pil;
-            cout << "\n--- LELANG AKTIF ---\n";
+            cout << "=== LELANG AKTIF ===\n";
             cout << "[1] Urutkan Harga (tertinggi)\n[2] Urutkan Nama (A-Z)\n[3] Tanpa urut\nPilih: ";
             cin >> pil;
             if (pil == 1) sortByHarga(tmp, n);
             else if (pil == 2) sortByNama(tmp, n);
 
-            cout << "\n";
+            cout << "\n------------------------------------------------------------\n";
             for (int i = 0; i < n; i++) {
                 char w[20];
                 struct tm* info = localtime(&tmp[i].waktu_tutup);
                 strftime(w, 20, "%Y-%m-%d %H:%M", info);
-                cout << "ID: " << tmp[i].id << " | " << tmp[i].nama
+                cout << "ID: " << tmp[i].id
+                     << " | " << tmp[i].nama
                      << " | " << tmp[i].kategori
                      << " | Max Bid: Rp" << tmp[i].harga_tertinggi
                      << " | Tutup: " << w << "\n";
             }
+            cout << "------------------------------------------------------------\n";
             cout << "Total: " << n << " lelang aktif.\n";
+            pause();
 
         } else if (pilihan == 2) {
-            // Cari barang — Sequential Search berdasarkan nama
-            if (jml_barang == 0) { cout << "\nBelum ada barang.\n"; continue; }
-            cout << "\n--- CARI BARANG (Sequential Search) ---\n";
+            clearScreen();
+            if (jml_barang == 0) { cout << "Belum ada barang.\n"; pause(); continue; }
+            cout << "=== CARI BARANG (Sequential Search) ===\n";
             string kata;
             cin.ignore();
             cout << "Kata kunci nama: "; getline(cin, kata);
 
             bool ketemu = false;
-            cout << "\nHasil pencarian:\n";
-            // Sequential Search: cek tiap elemen satu per satu
+            cout << "\n------------------------------------------------------------\n";
+            // Sequential Search: telusuri tiap elemen satu per satu
             for (int i = 0; i < jml_barang; i++)
                 if (db_barang[i].nama.find(kata) != string::npos) {
-                    cout << "ID: " << db_barang[i].id << " | " << db_barang[i].nama
+                    cout << "ID: " << db_barang[i].id
+                         << " | " << db_barang[i].nama
                          << " | Rp" << db_barang[i].harga_tertinggi
                          << " | " << (db_barang[i].status == 0 ? "AKTIF" : "TUTUP") << "\n";
                     ketemu = true;
                 }
-            if (!ketemu) cout << "Tidak ditemukan.\n";
+            if (!ketemu) cout << "Tidak ada barang yang cocok.\n";
+            cout << "------------------------------------------------------------\n";
+            pause();
 
         } else if (pilihan == 3) {
-            // Tawar barang
-            if (jml_tawaran >= 100) { cout << "Penyimpanan tawaran penuh.\n"; continue; }
-            cout << "\n--- TAWAR BARANG ---\n";
+            clearScreen();
+            if (jml_tawaran >= 100) { cout << "Penyimpanan tawaran penuh.\n"; pause(); continue; }
+            cout << "=== TAWAR BARANG ===\n";
+            cout << "------------------------------------------------------------\n";
             int ada = 0;
             for (int i = 0; i < jml_barang; i++)
                 if (db_barang[i].status == 0) {
-                    cout << "ID: " << db_barang[i].id << " | " << db_barang[i].nama
+                    cout << "ID: " << db_barang[i].id
+                         << " | " << db_barang[i].nama
                          << " | Max Bid: Rp" << db_barang[i].harga_tertinggi << "\n";
                     ada++;
                 }
-            if (ada == 0) { cout << "Tidak ada lelang aktif.\n"; continue; }
+            if (ada == 0) { cout << "Tidak ada lelang aktif.\n"; pause(); continue; }
+            cout << "------------------------------------------------------------\n";
 
             int id; long long nominal;
-            cout << "ID Barang: "; cin >> id;
+            cout << "ID Barang   : "; cin >> id;
             int idx = searchBarangById(id);
             if (idx == -1 || db_barang[idx].status == 1) {
-                cout << "Barang tidak ada atau sudah tutup!\n"; continue;
+                cout << "Barang tidak ada atau sudah tutup!\n"; pause(); continue;
             }
 
             long long batas = db_barang[idx].harga_tertinggi;
-            cout << "Minimal tawaran: Rp" << batas + 1 << "\nNominal Anda: ";
-            cin >> nominal;
-            if (nominal <= batas) { cout << "Tawaran terlalu rendah!\n"; continue; }
+            cout << "Minimal bid : Rp" << batas + 1 << "\n";
+            cout << "Tawaran Anda: Rp"; cin >> nominal;
+            if (nominal <= batas) { cout << "Tawaran terlalu rendah!\n"; pause(); continue; }
 
             // Update barang
             db_barang[idx].harga_tertinggi = nominal;
-            db_barang[idx].pemenang = currentUser;
+            db_barang[idx].pemenang        = currentUser;
 
             // Catat riwayat tawaran
             db_tawaran[jml_tawaran].id_barang = id;
@@ -486,8 +533,9 @@ void menuPeserta() {
             db_tawaran[jml_tawaran].waktu     = time(0);
             jml_tawaran++;
 
-            // Simpan barang dan tawaran ke file
+            // Simpan barang ke file
             ofstream fBarang("barang.csv");
+            fBarang << "id,nama,deskripsi,kategori,harga_awal,harga_tertinggi,pemenang,waktu_tutup,status\n";
             for (int i = 0; i < jml_barang; i++)
                 fBarang << db_barang[i].id << "," << db_barang[i].nama << ","
                         << db_barang[i].deskripsi << "," << db_barang[i].kategori << ","
@@ -496,45 +544,57 @@ void menuPeserta() {
                         << db_barang[i].status << "\n";
             fBarang.close();
 
+            // Simpan tawaran ke file (baris pertama = header)
             ofstream fTawaran("tawaran.csv");
+            fTawaran << "id_barang,username,nominal,waktu\n";
             for (int i = 0; i < jml_tawaran; i++)
                 fTawaran << db_tawaran[i].id_barang << "," << db_tawaran[i].username << ","
                          << db_tawaran[i].nominal << "," << db_tawaran[i].waktu << "\n";
             fTawaran.close();
 
-            cout << "Tawaran masuk! Anda memimpin lelang ini.\n";
+            cout << "\nTawaran Rp" << nominal << " berhasil masuk!\n";
+            cout << "Anda sedang memimpin lelang '" << db_barang[idx].nama << "'.\n";
+            pause();
 
         } else if (pilihan == 4) {
-            // Aktivitas saya — riwayat dan posisi saat ini
-            cout << "\n--- AKTIVITAS SAYA (" << currentUser << ") ---\n";
+            clearScreen();
+            cout << "=== AKTIVITAS SAYA (" << currentUser << ") ===\n";
+
             cout << "\n[ Riwayat Penawaran ]\n";
+            cout << "------------------------------------------------------------\n";
             int adaT = 0;
             for (int i = 0; i < jml_tawaran; i++)
                 if (db_tawaran[i].username == currentUser) {
                     char w[20];
                     struct tm* info = localtime(&db_tawaran[i].waktu);
                     strftime(w, 20, "%Y-%m-%d %H:%M", info);
-                    cout << "  Barang ID " << db_tawaran[i].id_barang
+                    cout << "Barang ID " << db_tawaran[i].id_barang
                          << " | Rp" << db_tawaran[i].nominal
                          << " | " << w << "\n";
                     adaT++;
                 }
-            if (adaT == 0) cout << "  Belum ada penawaran.\n";
+            if (adaT == 0) cout << "Belum ada penawaran.\n";
 
-            cout << "\n[ Barang yang Sedang Anda Pimpin ]\n";
+            cout << "\n[ Lelang yang Sedang Anda Pimpin ]\n";
+            cout << "------------------------------------------------------------\n";
             int adaP = 0;
             for (int i = 0; i < jml_barang; i++)
                 if (db_barang[i].status == 0 && db_barang[i].pemenang == currentUser) {
-                    cout << "  ID: " << db_barang[i].id << " | " << db_barang[i].nama
-                         << " (Rp" << db_barang[i].harga_tertinggi << ")\n";
+                    cout << "ID: " << db_barang[i].id
+                         << " | " << db_barang[i].nama
+                         << " | Rp" << db_barang[i].harga_tertinggi << "\n";
                     adaP++;
                 }
-            if (adaP == 0) cout << "  Tidak sedang memimpin lelang apapun.\n";
+            if (adaP == 0) cout << "Tidak sedang memimpin lelang apapun.\n";
+            cout << "------------------------------------------------------------\n";
+            pause();
 
         } else if (pilihan == 5) {
-            cout << "Logout berhasil.\n";
+            cout << "\nSampai jumpa, " << currentUser << "!\n";
+            pause();
         } else {
             cout << "Pilihan tidak valid!\n";
+            pause();
         }
     } while (pilihan != 5);
 
@@ -546,13 +606,14 @@ void menuPeserta() {
 //  MAIN
 // ============================================================
 int main() {
-    system("clear");
+    clearScreen();
 
-    // Muat data dari file saat program dimulai
+    // Muat data dari file — skip baris pertama (header)
     string buf;
 
     ifstream fAkun("akun.csv");
     if (fAkun.is_open()) {
+        getline(fAkun, buf); // skip header
         while (getline(fAkun, db_akun[jml_akun].username, ',')) {
             getline(fAkun, db_akun[jml_akun].password, ',');
             getline(fAkun, db_akun[jml_akun].role);
@@ -563,13 +624,14 @@ int main() {
 
     ifstream fBarang("barang.csv");
     if (fBarang.is_open()) {
+        getline(fBarang, buf); // skip header
         while (getline(fBarang, buf, ',')) {
             db_barang[jml_barang].id = stoi(buf);
             getline(fBarang, db_barang[jml_barang].nama, ',');
             getline(fBarang, db_barang[jml_barang].deskripsi, ',');
             getline(fBarang, db_barang[jml_barang].kategori, ',');
-            getline(fBarang, buf, ','); db_barang[jml_barang].harga_awal       = stoll(buf);
-            getline(fBarang, buf, ','); db_barang[jml_barang].harga_tertinggi  = stoll(buf);
+            getline(fBarang, buf, ','); db_barang[jml_barang].harga_awal      = stoll(buf);
+            getline(fBarang, buf, ','); db_barang[jml_barang].harga_tertinggi = stoll(buf);
             getline(fBarang, db_barang[jml_barang].pemenang, ',');
             getline(fBarang, buf, ','); db_barang[jml_barang].waktu_tutup = (time_t)stoll(buf);
             getline(fBarang, buf);     db_barang[jml_barang].status       = stoi(buf);
@@ -580,6 +642,7 @@ int main() {
 
     ifstream fTawaran("tawaran.csv");
     if (fTawaran.is_open()) {
+        getline(fTawaran, buf); // skip header
         while (getline(fTawaran, buf, ',')) {
             db_tawaran[jml_tawaran].id_barang = stoi(buf);
             getline(fTawaran, db_tawaran[jml_tawaran].username, ',');
@@ -593,14 +656,15 @@ int main() {
     // Loop utama program
     int pilihan;
     do {
-        // Cek expired saat di menu utama juga
+        // Cek expired di menu utama
         time_t now = time(0);
         for (int i = 0; i < jml_barang; i++)
             if (db_barang[i].status == 0 && now >= db_barang[i].waktu_tutup)
                 db_barang[i].status = 1;
 
-        cout << "\n=== SISTEM LELANG (SILELANG) ===\n";
-        cout << "[1] Login\n[2] Daftar\n[3] Keluar\nPilih: ";
+        clearScreen();
+        cout << "=== SILELANG — Sistem Informasi Lelang Barang Bekas ===\n";
+        cout << "[1] Login\n[2] Daftar Akun\n[3] Keluar\nPilih: ";
         cin >> pilihan;
 
         if (pilihan == 1) {
@@ -611,11 +675,14 @@ int main() {
             }
         } else if (pilihan == 2) {
             daftarAkun();
-        } else if (pilihan != 3) {
+        } else if (pilihan == 3) {
+            clearScreen();
+            cout << "Terima kasih telah menggunakan SILELANG. Sampai jumpa!\n\n";
+        } else {
             cout << "Pilihan tidak valid!\n";
+            pause();
         }
     } while (pilihan != 3);
 
-    cout << "Program selesai.\n";
     return 0;
 }
