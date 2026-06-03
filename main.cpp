@@ -608,7 +608,7 @@ void menuPeserta() {
 int main() {
     clearScreen();
 
-    // Muat data dari file — skip baris pertama (header)
+    // Muat data dari file
     string buf;
 
     ifstream fAkun("akun.csv");
